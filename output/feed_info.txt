@@ -1,0 +1,2 @@
+"feed_publisher_name","feed_publisher_url","feed_lang","feed_start_date","feed_end_date","feed_version"
+"AMAT_Milan_feed_lineaS","http://www.amat-mi.it","it","20150511","20160114","3"
