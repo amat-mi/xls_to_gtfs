@@ -61,11 +61,9 @@ def parse_excel (filename,sheetname):
         df2[3] = pd.Series(add_service_to_df(get_nrows(filename, sheetname),i,filename,sheetname), index=df2.index)
         df2[4] = pd.Series(trip_id, index=df2.index)
         df_c = pd.concat([df1, df2], ignore_index=True)
-        #print df_c.columns ##= ['station', 'time', 'service', 'trip_id']
         df1=df_c
-
-        #df1.rename(columns={ 2 : 'identity'})
-        #dfc.columns = ['station', 'time', 'service', 'trip_id']
+        print list(df1)
+    df1 = df1.rename(columns={ 'Unnamed: 0' : 'station', 'Unnamed: 1' : 'time', 3 :'service', 4 : 'trip_id'})
     return df1
 
 
@@ -83,17 +81,15 @@ def main():
 
     dir = os.path.dirname(os.path.abspath(__file__)) +'/orari/'
     filename = os.path.join (dir,'T9-LV-Invernale 2015.xls')
-    print filename
 
+    print 'processing' + filename
     df = pd.concat([parse_excel (filename,0) , parse_excel (filename,1)], ignore_index=True)
-    write_to_db(df,'test')    
-#print df
+    write_to_db(df,'test')
+    print filename + 'imported to postgres'
 
-    #add_service_to_df(get_nrows(filename),2,filename)
-
+ls
     #for i in os.listdir(dir_import):
-    #    parse_csv(os.path.join(dir_import,i), ';')
-    #    break
+        #parse_csv(os.path.join(dir_import,i), ';')
         #write_to_db(parse_csv(os.path.join(dir_import,i), ';'),'imp_orario')
         #print os.path.join(dir_import,i) + '      imported to postgres'
 
