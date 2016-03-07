@@ -79,13 +79,15 @@ def write_to_db(dataframe,table_name):
 
 
 def main():
+    #dir_import='/home/franco/workspace/amat/linee_s/orari/linee_s/csv/'
 
-    dir_import='/home/franco/workspace/amat/linee_s/orari/linee_s/csv/'
+    dir = os.path.dirname(os.path.abspath(__file__)) +'/orari/'
+    filename = os.path.join (dir,'T9-LV-Invernale 2015.xls')
+    print filename
 
-    filename='/home/franco/workspace/amat/linee_s/orari/T9-LV-Invernale 2015.xls'
-    print parse_excel (filename,1)
-    #df = pd.concat([parse_excel (filename,0) , parse_excel (filename,1)], ignore_index=True)
-    #print df
+    df = pd.concat([parse_excel (filename,0) , parse_excel (filename,1)], ignore_index=True)
+    write_to_db(df,'test')    
+#print df
 
     #add_service_to_df(get_nrows(filename),2,filename)
 
