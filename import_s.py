@@ -41,32 +41,37 @@ def get_nrows(filename,sheetname):
     df = pd.read_excel(filename,sheetname = sheetname, skiprows=4, parse_cols=[1])
     return df.count()[0]
 
-def add_service_to_df(dim_array,column_number,filename, sheetname):
+def add_trip_typ_to_df(dim_array,column_number,filename, sheetname):
     validity = np.ndarray((dim_array,),dtype=(str,10))
     df_val = pd.read_excel(filename, sheetname, parse_cols=[column_number],skiprows=3)
-    validity[:]=df_val.loc[0][0]
+    #print df_val
+    validity[:] = df_val.loc[0][0]
     return validity
 
 
-def parse_excel (filename,sheetname):
+def parse_excel_timetable ( filename, sheetname, servizio, orario):
     df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=5, parse_cols=[1,2],keep_default_na=False )
     df1 = df1.iloc[0:get_nrows(filename, sheetname)]
-    df1[3] = pd.Series(add_service_to_df(get_nrows(filename, sheetname),2,filename,sheetname), index=df1.index)
+    #print get_nrows(filename, sheetname)
+    df1[3] = pd.Series(add_trip_typ_to_df(get_nrows(filename, sheetname),2,filename,sheetname), index=df1.index)
     trip_id = 1
     df1[4] = pd.Series(trip_id, index=df1.index)
     for i in range (3, len(pd.read_excel(filename,sheetname = sheetname,skiprows=4).columns)):
         df2 = pd.read_excel(filename, sheetname = sheetname, skiprows=5, parse_cols=[1,i], keep_default_na=False)
         df2 = df2.iloc[0:get_nrows(filename, sheetname)]
         trip_id += 1
-        df2[3] = pd.Series(add_service_to_df(get_nrows(filename, sheetname),i,filename,sheetname), index=df2.index)
+        df2[3] = pd.Series(add_trip_typ_to_df(get_nrows(filename, sheetname),i,filename,sheetname), index=df2.index)
         df2[4] = pd.Series(trip_id, index=df2.index)
         df_c = pd.concat([df1, df2], ignore_index=True)
         df1=df_c
-        print list(df1)
-    df1 = df1.rename(columns={ 'Unnamed: 0' : 'station', 'Unnamed: 1' : 'time', 3 :'service', 4 : 'trip_id'})
+    df1 = df1.rename(columns={ 'Unnamed: 0' : 'id_fermata', 'Unnamed: 1' : 'ora', 3 :'corsa_tipo', 4 : 'corsa_id'})
+    df1 ['servizio'] = servizio
+    df1 ['orario'] = orario
     return df1
 
-
+def parse_excel_calendar (filename,sheetname):
+    df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=1, parse_cols=[0,16,17],keep_default_na=False )
+    return df1
 
 
 
@@ -78,16 +83,54 @@ def write_to_db(dataframe,table_name):
 
 def main():
     #dir_import='/home/franco/workspace/amat/linee_s/orari/linee_s/csv/'
+    print '---------------------'
+    dir = os.path.dirname(os.path.abspath(__file__)) +'/orari/tranvia'
+    for i in os.listdir(dir):
+        filename = os.path.join (dir,i)
+        print '+++++++++++++++++++++++++' + filename
+        if 'Calend' in i:
+            print 'processing  ' + filename
+            #write_to_db(parse_excel_calendar (filename,1), imp_t_calendario)
+            continue
+        if 'LV-INT' in i:
+            print 'processing  ' + filename
+            df = pd.concat([parse_excel_timetable (filename,0,'LV','INT') , parse_excel_timetable (filename,1,'LV','INT')], ignore_index=True)
+            print df
+            continue
+        if 'LV-INV' in i:
+            print 'processing  ' + filename
+            df = pd.concat([parse_excel_timetable (filename,0,'LV','INV') , parse_excel_timetable (filename,1,'LV','INV')], ignore_index=True)
+            print df
+            continue
+        if 'S-INV' in i:
+            print 'processing  ' + filename
+            df = pd.concat([parse_excel_timetable (filename,0,'S','INV') , parse_excel_timetable (filename,1,'S','INV')], ignore_index=True)
+            print df
+            continue
+        if 'F-INV' in i:
+            print 'processing  ' + filename
+            df = pd.concat([parse_excel_timetable (filename,0,'F','INV') , parse_excel_timetable (filename,1,'F','INV')], ignore_index=True)
+            print df
+            continue
+        else:
+            print '+++++danger++++++' + filename + '   anomalo'
+            continue
 
-    dir = os.path.dirname(os.path.abspath(__file__)) +'/orari/'
-    filename = os.path.join (dir,'T9-LV-Invernale 2015.xls')
 
-    print 'processing' + filename
-    df = pd.concat([parse_excel (filename,0) , parse_excel (filename,1)], ignore_index=True)
-    write_to_db(df,'test')
-    print filename + 'imported to postgres'
 
-ls
+    #filename = os.path.join (dir,'T9-LV-Invernale 2015.xls')
+    #filename = os.path.join (dir,'c_2016.xlsx')
+    #parse_excel_calendar (filename,1)
+
+    #print 'processing  ' + filename
+    #df = pd.concat([parse_excel_timetable (filename,0) , parse_excel_timetable (filename,1)], ignore_index=True)
+    #write_to_db(df,'imp_t_corse')
+    #print filename + '  imported to postgres'
+
+
+
+
+##### import per linee_s
     #for i in os.listdir(dir_import):
         #parse_csv(os.path.join(dir_import,i), ';')
         #write_to_db(parse_csv(os.path.join(dir_import,i), ';'),'imp_orario')
