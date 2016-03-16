@@ -69,9 +69,28 @@ def parse_excel_timetable ( filename, sheetname, servizio, orario):
     df1 ['orario'] = orario
     return df1
 
+def parse_excel_timetable_t ( filename, servizio, orario):
+    df1 = pd.read_excel(filename, sheetname = None, skiprows=5, parse_cols=[1,2],keep_default_na=False )
+    return len(df1.keys())
+
+
 def parse_excel_calendar (filename,sheetname):
     df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=1, parse_cols=[0,16,17],keep_default_na=False )
     return df1
+
+
+def parse_import_dir (dir):
+    a = []
+    for i in os.listdir(dir):
+        #print (i.rsplit('_')[0]).rsplit('-')[0]
+        dict = {}
+        dict ["filename"] = os.path.join (dir,i)
+        dict ["tipo"] = i.rsplit('_')[0]
+        #dict ["orario"] = (i.rsplit('_')[1]).rsplit('-')[0]
+        #dict ["orario"] = i.rsplit('-')[1].rsplit('_')[0]
+
+        a.append(dict)
+    return a
 
 
 
@@ -85,7 +104,9 @@ def main():
     #dir_import='/home/franco/workspace/amat/linee_s/orari/linee_s/csv/'
     print '---------------------'
     dir = os.path.dirname(os.path.abspath(__file__)) +'/orari/tranvia'
-    for i in os.listdir(dir):
+    print parse_import_dir (dir)
+    #for i in os.listdir(dir):
+"""
         filename = os.path.join (dir,i)
         print '+++++++++++++++++++++++++' + filename
         if 'Calend' in i:
@@ -94,28 +115,30 @@ def main():
             continue
         if 'LV-INT' in i:
             print 'processing  ' + filename
-            df = pd.concat([parse_excel_timetable (filename,0,'LV','INT') , parse_excel_timetable (filename,1,'LV','INT')], ignore_index=True)
-            print df
+            #print parse_excel_timetable_t (filename,'LV','INT')
+            #parse_excel_timetable (filename,0,'LV','INT')
+            #df = pd.concat([parse_excel_timetable (filename,0,'LV','INT') , parse_excel_timetable (filename,1,'LV','INT')], ignore_index=True)
+
             continue
         if 'LV-INV' in i:
             print 'processing  ' + filename
             df = pd.concat([parse_excel_timetable (filename,0,'LV','INV') , parse_excel_timetable (filename,1,'LV','INV')], ignore_index=True)
-            print df
+            #print df
             continue
         if 'S-INV' in i:
             print 'processing  ' + filename
             df = pd.concat([parse_excel_timetable (filename,0,'S','INV') , parse_excel_timetable (filename,1,'S','INV')], ignore_index=True)
-            print df
+            #print df
             continue
         if 'F-INV' in i:
             print 'processing  ' + filename
             df = pd.concat([parse_excel_timetable (filename,0,'F','INV') , parse_excel_timetable (filename,1,'F','INV')], ignore_index=True)
-            print df
+            #print df
             continue
         else:
-            print '+++++danger++++++' + filename + '   anomalo'
+            #print '+++++danger++++++' + filename + '   anomalo'
             continue
-
+"""
 
 
     #filename = os.path.join (dir,'T9-LV-Invernale 2015.xls')
