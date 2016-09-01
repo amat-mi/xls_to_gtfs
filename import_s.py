@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, MetaData
 #from sqlalchemy.pool import NullPool
 from config_db import *
 
+import fnmatch
 import os
 
 
@@ -49,6 +50,32 @@ def add_trip_typ_to_df(dim_array,column_number,filename, sheetname):
     return validity
 
 
+def parse_excel_timetable (filename, sheetname, servizio, orario):
+
+    if filetype == 'calendar':
+        df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=1, parse_cols=[0,16,17],keep_default_na=False )
+        return df1
+    elif filetype == 'timetable':
+        df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=5, parse_cols=[1,2],keep_default_na=False )
+        df1 = df1.iloc[0:get_nrows(filename, sheetname)]
+        #print get_nrows(filename, sheetname)
+        df1[3] = pd.Series(add_trip_typ_to_df(get_nrows(filename, sheetname),2,filename,sheetname), index=df1.index)
+        trip_id = 1
+        df1[4] = pd.Series(trip_id, index=df1.index)
+        for i in range (3, len(pd.read_excel(filename,sheetname = sheetname,skiprows=4).columns)):
+            df2 = pd.read_excel(filename, sheetname = sheetname, skiprows=5, parse_cols=[1,i], keep_default_na=False)
+            df2 = df2.iloc[0:get_nrows(filename, sheetname)]
+            trip_id += 1
+            df2[3] = pd.Series(add_trip_typ_to_df(get_nrows(filename, sheetname),i,filename,sheetname), index=df2.index)
+            df2[4] = pd.Series(trip_id, index=df2.index)
+            df_c = pd.concat([df1, df2], ignore_index=True)
+            df1=df_c
+        df1 = df1.rename(columns={ 'Unnamed: 0' : 'id_fermata', 'Unnamed: 1' : 'ora', 3 :'corsa_tipo', 4 : 'corsa_id'})
+        df1 ['servizio'] = servizio
+        df1 ['orario'] = orario
+        return df1
+
+
 def parse_excel_timetable ( filename, sheetname, servizio, orario):
     df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=5, parse_cols=[1,2],keep_default_na=False )
     df1 = df1.iloc[0:get_nrows(filename, sheetname)]
@@ -70,8 +97,40 @@ def parse_excel_timetable ( filename, sheetname, servizio, orario):
     return df1
 
 def parse_excel_timetable_t ( filename, servizio, orario):
-    df1 = pd.read_excel(filename, sheetname = None, skiprows=5, parse_cols=[1,2],keep_default_na=False )
-    return len(df1.keys())
+    df1 = pd.read_excel(filename, sheetname = None) #, skiprows=5, parse_cols=[1,2],keep_default_na=False )
+    for key, value in df1.iteritems() :
+        print key
+    #print df1.keys
+
+def parse_excel_timetable_sheet ( filename,  servizio, orario):
+    df1 = pd.read_excel(filename) #, skiprows=5, parse_cols=[1,2],keep_default_na=False )
+    a=[]
+    for key in df1.iteritems() :
+        print key
+        sheetname = key
+        df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=5, parse_cols=[1,2],keep_default_na=False )
+        df1 = df1.iloc[0:get_nrows(filename, sheetname)]
+        #print get_nrows(filename, sheetname)
+        df1[3] = pd.Series(add_trip_typ_to_df(get_nrows(filename, sheetname),2,filename,sheetname), index=df1.index)
+        trip_id = 1
+        df1[4] = pd.Series(trip_id, index=df1.index)
+        for i in range (3, len(pd.read_excel(filename,sheetname = sheetname,skiprows=4).columns)):
+            df2 = pd.read_excel(filename, sheetname = sheetname, skiprows=5, parse_cols=[1,i], keep_default_na=False)
+            df2 = df2.iloc[0:get_nrows(filename, sheetname)]
+            trip_id += 1
+            df2[3] = pd.Series(add_trip_typ_to_df(get_nrows(filename, sheetname),i,filename,sheetname), index=df2.index)
+            df2[4] = pd.Series(trip_id, index=df2.index)
+            df_c = pd.concat([df1, df2], ignore_index=True)
+            df1=df_c
+        df1 = df1.rename(columns={ 'Unnamed: 0' : 'id_fermata', 'Unnamed: 1' : 'ora', 3 :'corsa_tipo', 4 : 'corsa_id'})
+        df1 ['servizio'] = servizio
+        df1 ['orario'] = orario
+        a.append(df1)
+    for df in a:
+        dfa = pd.concat (df)
+
+    print dfa
+
 
 
 def parse_excel_calendar (filename,sheetname):
@@ -85,10 +144,11 @@ def parse_import_dir (dir):
         #print (i.rsplit('_')[0]).rsplit('-')[0]
         dict = {}
         dict ["filename"] = os.path.join (dir,i)
-        dict ["tipo"] = i.rsplit('_')[0]
-        #dict ["orario"] = (i.rsplit('_')[1]).rsplit('-')[0]
-        #dict ["orario"] = i.rsplit('-')[1].rsplit('_')[0]
-
+        dict ["filetype"] = os.path.splitext(i)[0].rsplit('_')[0]
+        if '_' in i:
+            dict ["orario"] = os.path.splitext(i)[0].rsplit('_')[1]
+            dict ["servizio"] = os.path.splitext(i)[0].rsplit('_')[2]
+            a.append(dict)
         a.append(dict)
     return a
 
@@ -105,7 +165,12 @@ def main():
     print '---------------------'
     dir = os.path.dirname(os.path.abspath(__file__)) +'/orari/tranvia'
     print parse_import_dir (dir)
+    filename = os.path.join (dir,'orario_LV_INV.xls')
+    parse_excel_timetable_sheet (filename,'LV','INT')
+    #parse_excel_timetable_t ( filename, 'a', 'b')
+
     #for i in os.listdir(dir):
+    #    print i
 """
         filename = os.path.join (dir,i)
         print '+++++++++++++++++++++++++' + filename
