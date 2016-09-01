@@ -1,2 +1,0 @@
-"agency_id","agency_name","agency_url","agency_timezone","agency_lang","agency_phone","agency_fare_url"
-"AMAT_Milan_feed_lineaS","COMUNE DI MILANO","http://www.muoversi.milano.it/","Europe/Rome","it","02.02.02",""
