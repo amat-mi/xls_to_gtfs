@@ -50,7 +50,7 @@ def add_trip_typ_to_df(dim_array,column_number,filename, sheetname):
     return validity
 
 
-def parse_excel_timetable (filename, sheetname, servizio, orario):
+def parse_excel_timetable_a (filename, sheetname, servizio, orario):
 
     if filetype == 'calendar':
         df1 = pd.read_excel(filename, sheetname = sheetname, skiprows=1, parse_cols=[0,16,17],keep_default_na=False )
@@ -94,7 +94,8 @@ def parse_excel_timetable ( filename, sheetname, servizio, orario):
     df1 = df1.rename(columns={ 'Unnamed: 0' : 'id_fermata', 'Unnamed: 1' : 'ora', 3 :'corsa_tipo', 4 : 'corsa_id'})
     df1 ['servizio'] = servizio
     df1 ['orario'] = orario
-    return df1
+    print df1
+
 
 def parse_excel_timetable_t ( filename, servizio, orario):
     df1 = pd.read_excel(filename, sheetname = None) #, skiprows=5, parse_cols=[1,2],keep_default_na=False )
@@ -166,7 +167,7 @@ def main():
     dir = os.path.dirname(os.path.abspath(__file__)) +'/orari/tranvia'
     print parse_import_dir (dir)
     filename = os.path.join (dir,'orario_LV_INV.xls')
-    parse_excel_timetable_sheet (filename,'LV','INT')
+    parse_excel_timetable (filename, 0, 'LV','INT')
     #parse_excel_timetable_t ( filename, 'a', 'b')
 
     #for i in os.listdir(dir):
